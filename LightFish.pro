@@ -45,7 +45,12 @@ OTHER_FILES += qml/LightFish.qml \
     qml/images/logo_lifx.png \
     qml/images/logo_lifx_grey.png \
     qml/perl/iwpriv_helper.pl \
-    qml/lifx3/lifx.py
+    qml/lifx3/lifx.py \
+    ../lifx-python/lifx/packetcodec.py \
+    ../lifx-python/lifx/network.py \
+    ../lifx-python/lifx/listen.py \
+    ../lifx-python/lifx/lifxconstants.py \
+    ../lifx-python/lifx/lifx.py
 
 # to disable building translations every time, comment out the
 # following CONFIG line
