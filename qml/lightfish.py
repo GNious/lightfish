@@ -9,8 +9,8 @@ import colorsys
 import random
 
 
-import lifx3
-import lifx3.lifx
+import lifx
+#import lifx.lifx
 
 
 BulbList = dict()
@@ -18,7 +18,7 @@ BulbListSelected = dict()
 
 # Example how to fill a list model with data from Python.
 def get_data():
-	lights = lifx3.lifx.get_lights()
+	lights = lifx.get_lights()
 	data = []
 	for bulb in lights:
 		data.append({'bulb_name': bulb.get_addr(), 'bulb_addr': bulb.get_addr()})
@@ -34,7 +34,7 @@ def get_data():
 def get_bulbs(discovery = False):
 	if( (len(BulbList) < 1) or (discovery) ):
 		print("Getting bulbs from network")
-		lights = lifx3.lifx.get_lights()
+		lights = lifx.get_lights()
 	else:
 		print("Getting bulbs from memory")
 		lights = BulbList.values()
@@ -92,18 +92,18 @@ def get_selected_count():
 def turn_on_all():
 	for addr in BulbListSelected:
 		#BulbListSelected[addr].set_power(1)
-		lifx3.lifx.set_power(addr, 1)
-	lifx3.lifx.pause(0.2)
+		lifx.set_power(addr, 1)
+	lifx.pause(0.2)
 
 def turn_off_all():
 	for addr in BulbListSelected:
 		#BulbListSelected[addr].set_power(0)
-		lifx3.lifx.set_power(addr, 0)
-	lifx3.lifx.pause(0.2)
+		lifx.set_power(addr, 0)
+	lifx.pause(0.2)
 
 def set_power(addr, power):
-	lifx3.lifx.set_power(addr, power)
-	lifx3.lifx.pause(0.2)
+	lifx.set_power(addr, power)
+	lifx.pause(0.2)
 	return 1
 
 def set_color_rgbhex(colorstring):
@@ -149,8 +149,8 @@ def set_kelvin(kelvin):
 def set_color():
 	for addr in BulbListSelected:
 		#BulbListSelected[addr].set_color( BulbListSelected[addr].hue, BulbListSelected[addr].saturation, BulbListSelected[addr].brightness, BulbListSelected[addr].kelvin, 300)
-		lifx3.lifx.set_color(addr, BulbListSelected[addr].hue, BulbListSelected[addr].saturation, BulbListSelected[addr].brightness, BulbListSelected[addr].kelvin, 500)
-	lifx3.lifx.pause(0.01)  #0.2
+		lifx.set_color(addr, BulbListSelected[addr].hue, BulbListSelected[addr].saturation, BulbListSelected[addr].brightness, BulbListSelected[addr].kelvin, 500)
+	lifx.pause(0.01)  #0.2
 
 #def set_color_rgb(red, green, blue):
 #	hue = 0
@@ -230,14 +230,15 @@ class PartyThread(Thread):
 				brightness = (random.randint(0, 1)) * 65534	#Randomize brightness
 				#set_color(self, hue, saturation, brightness, kelvin, fade_time):
 				#BulbListSelected[addr].set_color(  hue, 65535, brightness, 3500, 400)
-				lifx3.lifx.set_color(addr, hue, 65535, brightness, 3500, 400)
+				lifx.set_color(addr, hue, 65535, brightness, 3500, 400)
 				usleep(100) #sleep during 100ms
-			lifx3.lifx.pause(0.01)
+			lifx.pause(0.01)
 		#sys.stderr.write('party thread stopping')
 
 partythread = PartyThread()
 
 def party_start():
+	partythread.daemon = True	#Need to run as daemonic thread, to ensure exit of program.
 	partythread.threadPartyRun = True		#This is by no means proper - use semaphores
 	#print( "G:partythread.threadPartyRun: "+str(partythread.threadPartyRun))
 	#print( "G:killThreads: "+str(killThreads))
