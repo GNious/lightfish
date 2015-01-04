@@ -30,89 +30,83 @@
 
 import QtQuick 2.0
 import Sailfish.Silica 1.0
-import io.thp.pyotherside 1.0
+//import io.thp.pyotherside 1.0
 
 
 Page
 {
-	id: page
-	//property Python py
-	property bool isColor : true
-	property bool isPartyMode : false
+    id: page
+    //property Python py
+    property bool isColor : true
+    property bool isPartyMode : false
 
-	// To enable PullDownMenu, place our content in a SilicaFlickable
-	SilicaFlickable
-	{
-		anchors.fill: parent
+    // To enable PullDownMenu, place our content in a SilicaFlickable
+    SilicaFlickable
+    {
+        anchors.fill: parent
 
-		// PullDownMenu and PushUpMenu must be declared in SilicaFlickable, SilicaListView or SilicaGridView
-		PullDownMenu
-		{
-			id: pushDownFirst
-			MenuItem
-			{
-				text: qsTr("Select groups")
-				onClicked: pageStack.push(Qt.resolvedUrl("SecondPage.qml"))
-			}
-			MenuItem
-			{
-				text: qsTr("Select bulbs")
-				onClicked: pageStack.push(Qt.resolvedUrl("BulbListPage.qml"), { /*py: py*/})
-				//onClicked: pageStack.push(bulbListPage)
-				//BulbListPage { id: bulbListPage }
-			}
-		}
-		PushUpMenu
-		{
-			id: pushUpFirst
-			MenuItem
-			{
-				text: isColor ? qsTr("White Mode") : qsTr("Colour Mode")
-				onClicked:
-				{
-					isColor = !isColor
-					console.log('lightfish swapping colour/white');
-					colorButton.enabled = isColor
-					sliderSaturation.label = isColor ? "Whiteness" : "Temperature (K)"
-				}
-			}
-			MenuItem
-			{
-				id: pushUpPartyMode
-				property bool isPartyMode: false
-				text: isPartyMode ? qsTr("Normal Mode") : qsTr("Party Mode")
-				onClicked:
-				{
-					if(pushUpPartyMode.isPartyMode)
-					{
-						console.log('lightfish removing fancy');
-						py.call('lightfish.party_stop', [], function(result)
-						{
-							console.log('lightfish non-party');
-							pushUpPartyMode.isPartyMode = false;
-							pushUpPartyMode.text = isPartyMode ? qsTr("Normal Mode") : qsTr("Party Mode");
-						});
-					}
-					else
-					{
-						remorse.execute("Starting Party mode", function()
-						{
-							console.log('lightfish getting fancy');
-							py.call('lightfish.party_start', [], function(result)
-							{
-								console.log('lightfish party');
-								pushUpPartyMode.isPartyMode = true;
-								pushUpPartyMode.text = isPartyMode ? qsTr("Normal Mode") : qsTr("Party Mode");
-							});
-						});
-					}
-				}
-			}
-		}
-		RemorsePopup { id: remorse }
+        // PullDownMenu and PushUpMenu must be declared in SilicaFlickable, SilicaListView or SilicaGridView
+        /*PullDownMenu
+        {
+            id: pushDownFirst
+            MenuItem
+            {
+                text: qsTr("Select groups")
+                onClicked: pageStack.push(Qt.resolvedUrl("SecondPage.qml"))
+            }
+            MenuItem
+            {
+                text: qsTr("Select bulbs")
+                onClicked: pageStack.push(Qt.resolvedUrl("BulbListPage.qml"), { /*py: py* /})
+                //onClicked: pageStack.push(bulbListPage)
+                //BulbListPage { id: bulbListPage }
+            }
+        }*/
+        PushUpMenu
+        {
+            id: pushUpFirst
+            MenuItem
+            {
+                text: isColor ? qsTr("White Mode") : qsTr("Colour Mode")
+                onClicked:
+                {
+                    isColor = !isColor
+                    console.log('lightfish swapping colour/white');
+                    colorButton.enabled = isColor
+                    sliderSaturation.label = isColor ? "Whiteness" : "Temperature (K)"
+                }
+            }
+            MenuItem
+            {
+                id: pushUpPartyMode
+                property bool isPartyMode: false
+                text: isPartyMode ? qsTr("Normal Mode") : qsTr("Party Mode")
+                onClicked:
+                {
+                    if(isPartyMode)
+                    {
+                        pushUpPartyMode.isPartyMode = !isPartyMode;
+                        pushUpPartyMode.text = isPartyMode ? qsTr("Normal Mode") : qsTr("Party Mode");
+                        partyTimer.running = isPartyMode;
+                    }
+                    else
+                    {
+                        remorse.execute("Starting Party mode", function()
+                        {
+                            pushUpPartyMode.isPartyMode = !isPartyMode;
+                            pushUpPartyMode.text = isPartyMode ? qsTr("Normal Mode") : qsTr("Party Mode");
+                            partyTimer.running = isPartyMode;
+                        });
+                    }
+
+
+                }
+            }
+        }
+        RemorsePopup { id: remorse }
 
         // Tell SilicaFlickable the height of its content.
-		contentHeight: column.height
+        contentHeight: column.height
 
         // Place our content in a Column.  The PageHeader is always placed at the top
         // of the page, followed by our content.
@@ -121,159 +115,179 @@ Page
 
             width: page.width
             spacing: Theme.paddingLarge
-			//anchors.verticalCenter: parent.verticalCenter
-			//anchors.centerIn: parent
-			anchors.fill: parent
-			PageHeader {
-				title: qsTr("LightFish")
-			}
-			Label
-			{
+            //anchors.verticalCenter: parent.verticalCenter
+            //anchors.centerIn: parent
+            anchors.fill: parent
+            PageHeader {
+                title: qsTr("LightFish")
+            }
+            Label
+            {
                 x: Theme.paddingLarge
-				text: qsTr("Just some random text being shown here until I figure out what to actually put into this place")
+                //text: qsTr("Just some random text being shown here until I figure out what to actually put into this place")
                 color: Theme.secondaryHighlightColor
                 font.pixelSize: Theme.fontSizeExtraLarge
             }
-			Slider
-			{
-				id: sliderBrightness
-				property int brightness
-				//label: "Brightness"
-				//anchors.top: colorButton.bottom
-				value: 50
-				minimumValue: 000
-				maximumValue: 100
-				width: parent.width
-				anchors.horizontalCenter: parent.horizontalCenter
-				valueText : Math.round(value) + "%"
-				onSliderValueChanged:
-				{
-					if(brightness < value-2 || brightness > value+2)
-					{
-						brightness = Math.round(value)
-						lifxBulbsSelectedBrightness(brightness);
-					}
-					//lifxBulbsSelectedBrightness(Math.round(value));
-				}
-				label: "Brightness"
-			}
-			Slider
-			{
-				id: sliderSaturation
-				property int saturation
-				//label: "Brightness"
-				//anchors.top: colorButton.bottom
-				value: 50
-				minimumValue: 000
-				maximumValue: 100
-				width: parent.width
-				anchors.horizontalCenter: parent.horizontalCenter
-				valueText : isColor ?  Math.round(value) + "%" : Math.round( (value * (8000-2700)) / 100 )+2700 //2700-8000K
-				onSliderValueChanged:
-				{
-					var adjValue = isColor ? 100-value : value
-					if(saturation < adjValue-2 || saturation > adjValue+2)
-					{
-						saturation = Math.round(adjValue)
-						if( isColor )
-							lifxBulbsSelectedSaturation(saturation);
-						else
-							lifxBulbsSelectedKelvin(saturation);
-					}
-				}
-				label: isColor ? "Whiteness" : "Temperature (K)"
-			}
-			Row
-			{
-				id: lightPowerRow
-				anchors.horizontalCenter: parent.horizontalCenter
-				Button
-				{
-					id: onButton
-					text: "Turn On"
-					onClicked:
-					{
-						lifxBulbsSelectedOn();
-						offButton.enabled = true;
-					}
-				}
-				Button
-				{
-					id: offButton
-					text: "Turn Off"
-					onClicked:
-					{
-						lifxBulbsSelectedOff();
-						onButton.enabled = true;
-					}
-				}
-			}
-			Button
-			{
-				id: colorButton
-				text: "Choose a color"
-				anchors.horizontalCenter: parent.horizontalCenter
+            Slider
+            {
+                id: sliderBrightness
+                property int brightness
+                //label: "Brightness"
+                //anchors.top: colorButton.bottom
+                value: 50
+                minimumValue: 000
+                maximumValue: 100
+                width: parent.width
+                anchors.horizontalCenter: parent.horizontalCenter
+                valueText : Math.round(value) + "%"
+                onSliderValueChanged:
+                {
+                    if(brightness < value-2 || brightness > value+2) //filter small changes
+                    {
+                        brightness = value //Math.round(value)
+                        lifxBulbsSelectedBrightness(brightness);
+                    }
+                    //lifxBulbsSelectedBrightness(Math.round(value));
+                }
+                label: "Brightness"
+            }
+            Slider
+            {
+                id: sliderSaturation
+                property int saturation
+                //label: "Brightness"
+                //anchors.top: colorButton.bottom
+                value: 50
+                minimumValue: 000
+                maximumValue: 100
+                width: parent.width
+                anchors.horizontalCenter: parent.horizontalCenter
+                valueText : isColor ?  Math.round(value) + "%" : Math.round( (value * (8000-2700)) / 100 )+2700 //2700-8000K
+                onSliderValueChanged:
+                {
+                    var adjValue = isColor ? 100-value : value
+                    if(saturation < adjValue-2 || saturation > adjValue+2) //filter small changes
+                    {
+                        saturation = Math.round(adjValue)
+                        if( isColor )
+                            lifxBulbsSelectedSaturation(saturation);
+                        else
+                            lifxBulbsSelectedKelvin(saturation);
+                    }
+                }
+                label: isColor ? "Whiteness" : "Temperature (K)"
+            }
+            Row
+            {
+                id: lightPowerRow
+                anchors.horizontalCenter: parent.horizontalCenter
+                Button
+                {
+                    id: onButton
+                    text: "Turn On"
+                    onClicked:
+                    {
+                        lifxBulbsSelectedOn();
+                        offButton.enabled = true;
+                    }
+                }
+                Button
+                {
+                    id: offButton
+                    text: "Turn Off"
+                    onClicked:
+                    {
+                        lifxBulbsSelectedOff();
+                        onButton.enabled = true;
+                    }
+                }
+            }
+            Button
+            {
+                id: colorButton
+                text: "Choose a color"
+                anchors.horizontalCenter: parent.horizontalCenter
 
-				onClicked:
-				{
-					var dialog = pageStack.push("Sailfish.Silica.ColorPickerDialog")
-					dialog.accepted.connect(function()
-					{
-						//colorIndicator.color = dialog.color
-						colorButton.text = "Choose a color (" + dialog.color+")";
-						py.call('lightfish.set_color_rgbhex', [""+dialog.color], function(result)
-						{
-							console.log('lightfish getting colour');
-						});
-						pushDownFirst.highlightColor = dialog.color;
-						pushUpFirst.highlightColor = dialog.color;
-						lifxGetBulbs( page );
-					})
-				}
-			}
-		}
+                onClicked:
+                {
+                    var dialog = pageStack.push("Sailfish.Silica.ColorPickerDialog")
+                    dialog.accepted.connect(function()
+                    {
+                        //colorIndicator.color = dialog.color
+                        colorButton.text = "Choose a color (" + dialog.color+")";
+
+
+                        lifxBulbsSelectedColor(dialog.color);
+                        //pushDownFirst.highlightColor = dialog.color;
+                        pushUpFirst.highlightColor = dialog.color;
+                        lifxGetBulbs( page );
+                    })
+                }
+            }
+        }
 
     }
-	onStatusChanged:
-	{
-		var cntSelectedBulbs = lifxBulbsSelectedCount();
-		if (status == PageStatus.Active && cntSelectedBulbs == 0)
-		{
-			pageStack.push(Qt.resolvedUrl("BulbListPage.qml"), { /*py: py*/})
-		}
-		if (status == PageStatus.Active && cntSelectedBulbs > 0)
-		{
-			lifxGetBulbs( page );
-		}
-	}
-	function setLights(lights)
-	{
-		var cntSelectedBulbs = lights.length;
-		var newBrightness = 0;
-		var newHue = 0;
-		var newSaturation = 0;
-		var hasPowerOn = false;
-		var hasPowerOff = false
-		for (var i=0; i<lights.length; i++)
-		{
-			var light = lifxBulbGetObject_sync(lights[i]['bulb_addr']);
-			newBrightness += light.bulb_brightness;
-			newHue += light.bulb_hue;
-			newSaturation += light.bulb_saturation;
-			hasPowerOn = light.bulb_power > 0 ? true : hasPowerOn;
-			hasPowerOff = light.bulb_power == 0 ? false : hasPowerOff;
-		}
-		newBrightness = newBrightness/cntSelectedBulbs;
-		newHue = newHue/cntSelectedBulbs;
-		newSaturation = newSaturation/cntSelectedBulbs;
-		if(hasPowerOn)
-			offButton.enabled = true;
-		if(hasPowerOff)
-			onButton.enabled = true;
-		sliderBrightness.value = 100/65535 * newBrightness;
-		if(isColor)
-			sliderSaturation.value = 100- (100/65535 * newSaturation);
-	}
+
+    onStatusChanged:
+    {
+        var cntSelectedBulbs = lifxBulbsSelectedCount();
+        if (status == PageStatus.Active && cntSelectedBulbs == 0)
+        {
+            pageStack.push(Qt.resolvedUrl("BulbListPage.qml"), { /*py: py*/})
+        }
+        if (status == PageStatus.Active && cntSelectedBulbs > 0)
+        {
+            lifxGetBulbs( page );
+            pageStack.pushAttached(Qt.resolvedUrl("BulbListPage.qml"), { /*py: py*/})
+            callScreenView("FirstPage");
+        }
+    }
+
+    function setLights(lights)
+    {
+        var cntSelectedBulbs = 0;//lights.length;
+        var newBrightness = 0;
+        var newHue = 0;
+        var newSaturation = 0;
+        var hasPowerOn = false;
+        var hasPowerOff = false
+        var n = 0;
+        var lightsCount = lightsModel.rowCount()
+        for( ; n<lightsCount; n++)
+        {
+            if( lightsModel.isSelectedLight(n))
+            {
+                var light = lightsModel.getLight(n);
+                newBrightness += light.brightness;
+                //newHue += light.bulb_hue;
+                newSaturation += light.saturation;
+                hasPowerOn = light.power > 0 ? true : hasPowerOn;
+                hasPowerOff = light.power == 0 ? false : hasPowerOff;
+
+                cntSelectedBulbs++;
+            }
+        }
+
+/*		for (var i=0; i<lights.length; i++)
+        {
+            var light = lifxBulbGetObject_sync(lights[i]['bulb_addr']);
+            newBrightness += light.bulb_brightness;
+            newHue += light.bulb_hue;
+            newSaturation += light.bulb_saturation;
+            hasPowerOn = light.bulb_power > 0 ? true : hasPowerOn;
+            hasPowerOff = light.bulb_power == 0 ? false : hasPowerOff;
+        }*/
+        newBrightness = newBrightness/cntSelectedBulbs;
+        newHue = newHue/cntSelectedBulbs;
+        newSaturation = newSaturation/cntSelectedBulbs;
+        if(hasPowerOn)
+            offButton.enabled = true;
+        if(hasPowerOff)
+            onButton.enabled = true;
+        sliderBrightness.value = 100/65535 * newBrightness;
+        if(isColor)
+            sliderSaturation.value = 100- (100/65535 * newSaturation);
+    }
 }
 
 

@@ -34,6 +34,15 @@
 
 #include <sailfishapp.h>
 
+#include <QQmlEngine>
+#include <QtQuick/QQuickView>
+#include <QGuiApplication>
+
+#include "lifxdiscoveryclient.h"
+#include "lifxgatewayclient.h"
+#include "lifxlightclient.h"
+#include "lifxlightsmodel.h"
+
 
 int main(int argc, char *argv[])
 {
@@ -46,6 +55,27 @@ int main(int argc, char *argv[])
     //
     // To display the view, call "show()" (will show fullscreen on device).
 
-    return SailfishApp::main(argc, argv);
-}
+    // Register library objects
+    qmlRegisterType<QTIoT::LIFX::LIFXLightClient>("IoTQuick", 1, 0, "LIFXLightClient");
+    qmlRegisterType<QTIoT::LIFX::LIFXGatewayClient>("IoTQuick", 1, 0, "LIFXGatewayClient");
+    qmlRegisterType<QTIoT::LIFX::LIFXDiscoveryClient>("IoTQuick", 1, 0, "LIFXDiscoveryClient" );
 
+    // Register library models
+    qmlRegisterType<LIFXLightsModel>("IoTQuick.LIFXLightsModel", 1, 0, "LIFXLightsModel" );
+
+
+    //Create UniqueID for Analytics.js, even if we only need it on the first run
+	QGuiApplication *app = SailfishApp::application(argc, argv);
+	QQuickView *view = SailfishApp::createView();
+	QQmlContext *rootctxt = view->rootContext();
+	rootctxt->setContextProperty("quuid", QUuid::createUuid() );
+
+
+    //Load first QML, and show it
+	view->setSource(SailfishApp::pathTo("qml/LightFish.qml"));
+	view->show(); //"qml/LightFish.qml"
+
+	return app->exec();
+	//return SailfishApp::main(argc, argv);
+
+}

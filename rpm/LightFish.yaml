@@ -1,6 +1,6 @@
 Name:    LightFish
 Summary: LighFish - UNofficial LIFX for Sailfish
-Version: 0.1
+Version: 0.2
 Release: 1
 # The contents of the Group field must be one of the groups listed here:
 # http://gitorious.org/meego-developer-tools/spectacle/blobs/master/data/GROUPS
@@ -13,7 +13,7 @@ Sources:
 - '%{name}-%{version}.tar.bz2'
 Description: |
   LIFX app (UNofficial) for Jolla - Control your lightbulbs from your Jolla phone.
-  Note: If you do no have any LIFX lightbulbs, this app is not for you (yet). Go buy some: http://mbsy.co/lifx/4479285
+  Note: If you do no have any LIFX lightbulbs, this app is not for you (yet). Go buy some: http://lifx.co
 Configure: none
 # The qtc5 builder inserts macros to allow QtCreator to have fine
 # control over qmake/make execution
@@ -34,7 +34,7 @@ PkgConfigBR:
 # Runtime dependencies which are not automatically detected
 Requires:
   - sailfishsilica-qt5 >= 0.10.9 
-  - pyotherside-qml-plugin-python3-qt5
+#  - pyotherside-qml-plugin-python3-qt5
 
 # All installed files
 Files:
@@ -43,7 +43,7 @@ Files:
   - '%{_datadir}/%{name}'
   - '%{_datadir}/applications/%{name}.desktop'
   - '%{_datadir}/icons/hicolor/86x86/apps/%{name}.png'
-  - '%attr(4755,root,root) qml/perl/iwpriv_helper.pl'
+  - '%attr(4755,root,root) %{_datadir}/%{name}/qml/perl/iwpriv_helper.pl'
 
 # For more information about yaml and what's supported in Sailfish OS
 # build system, please see https://wiki.merproject.org/wiki/Spectacle

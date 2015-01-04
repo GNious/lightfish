@@ -14,7 +14,8 @@ TARGET = LightFish
 
 CONFIG += sailfishapp
 
-SOURCES += src/LightFish.cpp
+SOURCES += src/LightFish.cpp \
+    src/lifxlightsmodel.cpp
 
 OTHER_FILES += qml/LightFish.qml \
     qml/cover/CoverPage.qml \
@@ -25,14 +26,7 @@ OTHER_FILES += qml/LightFish.qml \
     translations/*.ts \
     $${TARGET}.desktop \
     qml/pages/BulbListPage.qml \
-    qml/pages/lightfish.py \
-    qml/pages/lifx3/packetcodec.py \
-    qml/pages/lifx3/network.py \
-    qml/pages/lifx3/listen.py \
-    qml/pages/lifx3/lifxconstants.py \
-    qml/pages/lifx3/lifx3.py \
     lightfish_test_3.png \
-    qml/lightfish.py \
     qml/pages/BulbDetails.qml \
     qml/pages/storage.js \
     qml/images/lifx-icon.png \
@@ -41,16 +35,22 @@ OTHER_FILES += qml/LightFish.qml \
     qml/images/logo_lifx.png \
     qml/images/logo_lifx_grey.png \
     qml/perl/iwpriv_helper.pl \
-    qml/lifx3/lifx.py \
-    qml/lifx/packetcodec.py \
-    qml/lifx/network.py \
-    qml/lifx/listen.py \
-    qml/lifx/lifxconstants.py \
-    qml/lifx/lifx.py \
-    qml/lifx/__init__.py
+    qml/pages/IntroPage.qml \
+    qml/analytics.js \
+    qml/images/LIFX_Bulb_bg.jpg \
+    qml/images/LIFX_Bulb_bg.png \
 
 # to disable building translations every time, comment out the
 # following CONFIG line
 CONFIG += sailfishapp_i18n
 TRANSLATIONS += translations/$${TARGET}-de.ts
 
+HEADERS += \
+    src/lifxlightsmodel.h
+
+#INCLUDEPATH += ../libQTIoT_sailfish/src/
+INCLUDEPATH += ../libQTIoT/src/
+#unix:LIBS += "-L../build-QTIoT-Desktop_Qt_Qt_Version_clang_64bit-Debug" "-lQTIoT"
+unix:LIBS += "-L../libQTIoT/build-QTIoT_SF-MerSDK_SailfishOS_armv7hl-Debug" "-lQTIoT"
+unix:LIBS += "-L../libQTIoT/build-QTIoT_SF-MerSDK_SailfishOS_i486-Debug" "-lQTIoT"
+#unix:LIBS += "-L../libQTIoT/build-QTIoT_SF-MerSDK_SailfishOS_armv7hl-Release" "-lQTIoT"

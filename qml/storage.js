@@ -1,8 +1,9 @@
+.import QtQuick.LocalStorage 2.0 as Sql
 //storage.js
 // First, let's create a short helper function to get the database connection
 function getDatabase(appname, dbver)
 {
-	return openDatabaseSync(appname, dbver, "StorageDatabase", 100000);
+	return Sql.LocalStorage.openDatabaseSync(appname, dbver, "StorageDatabase", 100000);
 }
 
 // At the start of the application, we can initialize the tables we need if they haven't been created yet

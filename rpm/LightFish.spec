@@ -13,7 +13,7 @@ Name:       LightFish
 %{!?qtc_make:%define qtc_make make}
 %{?qtc_builddir:%define _builddir %qtc_builddir}
 Summary:    LighFish - UNofficial LIFX for Sailfish
-Version:    0.1
+Version:    0.2
 Release:    1
 Group:      Qt/Qt
 License:    LICENSE
@@ -21,7 +21,6 @@ URL:        http://lightfish.thang.dk
 Source0:    %{name}-%{version}.tar.bz2
 Source100:  LightFish.yaml
 Requires:   sailfishsilica-qt5 >= 0.10.9
-Requires:   pyotherside-qml-plugin-python3-qt5
 BuildRequires:  pkgconfig(sailfishapp) >= 1.0.2
 BuildRequires:  pkgconfig(Qt5Core)
 BuildRequires:  pkgconfig(Qt5Qml)
@@ -30,7 +29,7 @@ BuildRequires:  desktop-file-utils
 
 %description
 LIFX app (UNofficial) for Jolla - Control your lightbulbs from your Jolla phone.
-Note: If you do no have any LIFX lightbulbs, this app is not for you (yet). Go buy some: http://mbsy.co/lifx/4479285
+Note: If you do no have any LIFX lightbulbs, this app is not for you (yet). Go buy some: http://lifx.co
 
 
 %prep
@@ -70,6 +69,6 @@ desktop-file-install --delete-original       \
 %{_datadir}/%{name}
 %{_datadir}/applications/%{name}.desktop
 %{_datadir}/icons/hicolor/86x86/apps/%{name}.png
-#%attr(4755,root,root) qml/perl/iwpriv_helper.pl
+%attr(4755,root,root) %{_datadir}/%{name}/qml/perl/iwpriv_helper.pl
 # >> files
 # << files

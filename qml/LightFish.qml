@@ -31,171 +31,291 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import "pages"
-import io.thp.pyotherside 1.0
-//import pyotherside 1.2
+//import io.thp.pyotherside 1.0
+import IoTQuick 1.0
+import IoTQuick.LIFXLightsModel 1.0
+
+
 import "storage.js" as Storage
+import "analytics.js" as Analytics
+
 
 ApplicationWindow
 {
-	property int bulbsAreOn: 0
-	id: p
+    property int bulbsAreOn: 0
+    id: p
+    property string analyticsID : ""
+    property string appName : "LightFish"
+    property string appVersion: "0.2a"
 
+    property string appUUID : quuid;
 
-	Python
-	{
-		id: py
-		Component.onCompleted:
-		{
-			// Add the directory of this .qml file to the search path
-			addImportPath(Qt.resolvedUrl('.'));
+    /*Python
+    {
+        id: py
+        Component.onCompleted:
+        {
+            Storage.initialize();
+            var oldUUID = Storage.getSetting("analytics","UUID");
+            if(oldUUID != "Unknown")
+                appUUID = oldUUID;
+            else
+                Storage.setSetting("analytics", "UUID", appUUID);
+            //function register( trackingID_in, clientID_in, appName_in, appVersion_in, appID_in )
+            Analytics.register(analyticsID, appUUID /*"Jolla"* /, appName, appVersion, "dk.thang.lightfish");
+            Analytics.registerAdditionSettings("screenres",""+p.width+"x"+p.height);
 
-			// Import the main module and load the data
-			importModule('lightfish', function ()
-			{
-				console.log('lightfish imported');
-				py.call('lightfish.get_bulbs', [], function(result)
-				{
-					console.log('lightfish chewing');
-					// Load the received data into the list model
-					for (var i=0; i<result.length; i++) {
-						console.log('lightfish @'+result[i]['bulb_name']);
-						//listModel.append(result[i]);
-					}
-					console.log('lightfish done');
-				});
-				console.log('lightfish processed');
-			});
-		}
-		//Component.onDestruction:
-	}
+            // Add the directory of this .qml file to the search path
+            addImportPath(Qt.resolvedUrl('.'));
+
+            // Import the main module and load the data
+            console.log('lightfish importing');
+            importModule('lightfish', function ()
+            {
+                console.log('lightfish imported');
+                py.call('lightfish.get_bulbs', [], function(result)
+                {
+                    console.log('lightfish chewing');
+                    // Load the received data into the list model
+                    for (var i=0; i<result.length; i++) {
+                        console.log('lightfish @'+result[i]['bulb_name']);
+                        //listModel.append(result[i]);
+                    }
+                    console.log('lightfish done');
+                    pageStack.replace(Qt.resolvedUrl("pages/FirstPage.qml"), { /*py: py* /})
+                });
+                console.log('lightfish processed');
+                callScreenView();
+
+            });
+            setHandler('bulbs.found', function (count)
+            {
+                pageStack.replace(Qt.resolvedUrl("FirstPage.qml"), { /*py: py* /})
+            });
+
+        }
+        //Component.onDestruction:
+    }*/
 
 //	initialPage: Component { FirstPage { py: py } }
-	initialPage: Component { FirstPage {  } }
-	cover: Qt.resolvedUrl("cover/CoverPage.qml")
+    initialPage: Qt.resolvedUrl("pages/IntroPage.qml")
+//	initialPage: Component { FirstPage {  } }
+    cover: Qt.resolvedUrl("cover/CoverPage.qml")
+    //bulbslistPage: Qt.resolvedUrl("pages/BulbListPage.qml")
+
+    /*ListModel{id: lightsModel}*/
+    LIFXLightsModel
+    {
+        id: lightsModel
+    }
 
 
-	function lifxGetBulbs( page )
-	{
-		console.log("lifxGetBulbs")
-		py.call('lightfish.get_bulbs', [], function(result)
-		{
-			console.log("lifxGetBulbs: "+result.length+" lights");
-			page.setLights(result);
-		});
-	}
-	function lifxBulbGetObject(addr,page)
-	{
-		console.log("lifxBulbGetObject")
-		py.call('lightfish.get_bulb', [addr], function(result)
-		{
-			console.log("lifxBulbGetObject: got object");
-			page.setBulb(result);
-		});
-	}
-	function lifxBulbGetObject_sync(addr)
-	{
-		console.log("lifxBulbGetObject_sync ("+addr+")")
-		var result = py.call_sync('lightfish.get_bulb', [addr])
-		console.log("lifxBulbGetObject_sync - got bulb: "+result.bulb_name+"@"+result.bulb_addr)
+    LIFXDiscoveryClient
+    {
+        id: discoveryClient
+        onNewGatewayClient:{discoveryClient.startDiscoveryTimer(60000);}
+        onNewIoTItem:
+        { //item.power = !item.power; textlabel.text = item.label; console.log("New IoTItem!");
+            lightsModel.appendLight(item)
+            if(lightsModel.rowCount() == 1)
+                pageStack.replace(Qt.resolvedUrl("pages/FirstPage.qml"), { /*py: py*/})
+        }
+    }
+    Timer //Timer used for Party-Mode
+    {
+        id: partyTimer
+        interval: 300
+        running: false
+        repeat: true
+        onTriggered:
+        {
+            var n = 0;
+            var lightsCount = lightsModel.rowCount()
+            for( ; n<lightsCount; n++)
+            {
+                if( lightsModel.isSelectedLight(n))
+                {
+                    var light = lightsModel.getLight(n);
+                    //setColourAll(int red, int green, int blue, float brightnesspercent, int saturation, int kelvin);
+                    light.setColourAll(Math.random()*255, Math.random()*255, Math.random()*255, Math.random()*100, 255, 8000 );
+                }
+            }
 
-		return result;
-	}
+        }
 
-	function coverLeftClicked()
-	{
-		console.log("coverLeftClicked")
-	}
-	function coverRightClicked()
-	{
-		console.log("coverRightClicked")
-		if( bulbsAreOn == 0)
-		{
-			lifxBulbsSelectedOn();
-			bulbsAreOn = 1;
-		}
-		else
-		{
-			lifxBulbsSelectedOff()
-			bulbsAreOn = 0;
-		}
+    }
 
-	}
-	function lifxBulbsSelectedOff()
-	{
-		console.log("lifxBulbsSelectedOff")
-		py.call('lightfish.turn_off_all', [], function(result)
-		{
-			console.log('lightfish unlight!');
-		});
-	}
-	function lifxBulbsSelectedCount()
-	{
-		console.log("lifxBulbsSelectedCount")
-/*		py.call('lightfish.get_selected_count', [], function(result)
-		{
-			console.log('lightfish light!');
-		});*/
-		var n = py.call_sync('lightfish.get_selected_count', []);
-		console.log("lifxBulbsSelectedCount: "+n+"pcs")
-		return n;
-	}
-	function lifxBulbsSelectedOn()
-	{
-		console.log("lifxBulbsSelectedOn")
-		py.call('lightfish.turn_on_all', [], function(result)
-		{
-			console.log('lightfish light!');
-		});
-	}
-	function lifxBulbSelect(addr)
-	{
-		console.log("lifxBulbSelect")
-		py.call('lightfish.set_active', [addr], function(result)
-		{
-			console.log('lightfish added: '+ name);
-		});
-	}
-	function lifxBulbDeSelect(addr)
-	{
-		console.log("lifxBulbDeSelect")
-		py.call('lightfish.set_inactive', [addr], function(result)
-		{
-			console.log('lightfish removed: '+ name);
-		});
-	}
 
-	function lifxBulbsSelectedBrightness(value)
-	{
-		console.log("lifxBulbsSelectedBrightness")
-		py.call('lightfish.set_brightness', [value], function(result)
-		{
-			console.log('lightfish brightly: '+ value);
-		});
-	}
-	function lifxBulbsSelectedSaturation(value)
-	{
-		console.log("lifxBulbsSelectedSaturation")
-		py.call('lightfish.set_saturation', [value], function(result)
-		{
-			console.log('lightfish whitely: '+ value);
-		});
-	}
-	function lifxBulbsSelectedKelvin(value)
-	{
-		console.log("lifxBulbsSelectedKelvin")
-		py.call('lightfish.set_kelvin', [value], function(result)
-		{
-			console.log('lightfish temperature: '+ value);
-		});
-	}
-	function pythonShutdown()
-	{
-		console.log("pythonShutdown")
-		py.call('lightfish.pythonShutdown', [value], function(result)
-		{
-			console.log('lightfish temperature: '+ value);
-		});
-	}
+    function lifxGetBulbs( page )
+    {
+        console.log("lifxGetBulbs")
+    }
+    function lifxBulbGetObject(addr,page)
+    {
+        console.log("lifxBulbGetObject")
+    }
+    function lifxBulbGetObject_sync(addr)
+    {
+        console.log("lifxBulbGetObject_sync ("+addr+")")
+        var result = undefined;
+
+        return result;
+    }
+
+    function coverLeftClicked()
+    {
+        console.log("coverLeftClicked")
+    }
+    function coverRightClicked()
+    {
+        console.log("coverRightClicked")
+        if( bulbsAreOn == 0)
+        {
+            lifxBulbsSelectedOn();
+            bulbsAreOn = 1;
+        }
+        else
+        {
+            lifxBulbsSelectedOff()
+            bulbsAreOn = 0;
+        }
+
+    }
+    function lifxBulbsSelectedOff()
+    {
+        console.log("lifxBulbsSelectedOff")
+        var n = 0;
+        var lightsCount = lightsModel.rowCount()
+        for( ; n<lightsCount; n++)
+        {
+            if( lightsModel.isSelectedLight(n))
+            {
+                var light = lightsModel.getLight(n);
+                light.power = false;
+            }
+        }
+    }
+    function lifxBulbsSelectedCount()
+    {
+        console.log("lifxBulbsSelectedCount")
+        var n = lightsModel.countSelectedLights();
+
+        //console.log("lifxBulbsSelectedCount: "+n+"pcs")
+        return n;
+    }
+    function lifxBulbsSelectedOn()
+    {
+        console.log("lifxBulbsSelectedOn")
+        var n = 0;
+        var lightsCount = lightsModel.rowCount()
+        for( ; n<lightsCount; n++)
+        {
+            if( lightsModel.isSelectedLight(n))
+            {
+                var light = lightsModel.getLight(n);
+                light.power = true;
+            }
+        }
+    }
+    function lifxBulbSelect(addr)
+    {
+        console.log("lifxBulbSelect")
+    }
+    function lifxBulbDeSelect(addr)
+    {
+        console.log("lifxBulbDeSelect")
+    }
+
+    function lifxBulbsSelectedBrightness(value)
+    {
+        if (value < 1)
+            value = 1;
+        if (value > 100)
+            value = 100;
+        //log(n)/log(100)
+        //var logval = Math.log(value) * 100 / Math.log(100);
+        //n^3/10000
+        var logval = value^3/10000;
+        console.log("lifxBulbsSelectedBrightness("+value+")=>"+logval);
+        var n = 0;
+        var lightsCount = lightsModel.rowCount();
+        for( ; n<lightsCount; n++)
+        {
+            if( lightsModel.isSelectedLight(n))
+            {
+                var light = lightsModel.getLight(n);
+                light.brightness = logval; //value;
+            }
+        }
+    }
+    function lifxBulbsSelectedSaturation(value)
+    {
+        var saturation = value * 2.55
+        console.log("lifxBulbsSelectedSaturation("+value+")->"+saturation)
+        var n = 0;
+        var lightsCount = lightsModel.rowCount()
+        for( ; n<lightsCount; n++)
+        {
+            if( lightsModel.isSelectedLight(n))
+            {
+                var light = lightsModel.getLight(n);
+                light.saturation = saturation;
+            }
+        }
+    }
+    function lifxBulbsSelectedKelvin(value)
+    {
+        var kelvin =  (8000-2700)/100*value + 2700 //int((kelvin* (8000-2700))/100)+2700
+        console.log("lifxBulbsSelectedKelvin("+value+")->"+kelvin)
+        var n = 0;
+        var lightsCount = lightsModel.rowCount()
+        for( ; n<lightsCount; n++)
+        {
+            if( lightsModel.isSelectedLight(n))
+            {
+                var light = lightsModel.getLight(n);
+                light.temperature = kelvin;
+            }
+        }
+    }
+    function lifxBulbsSelectedColor(value)
+    {
+        console.log("lifxBulbsSelectedColor")
+        var n = 0;
+        var lightsCount = lightsModel.rowCount()
+        for( ; n<lightsCount; n++)
+        {
+            if( lightsModel.isSelectedLight(n))
+            {
+                var light = lightsModel.getLight(n);
+                light.colour = value;
+            }
+        }
+    }
+
+
+
+    function callScreenView(screen)
+    {
+        if(!Analytics.isInitialized())
+        {
+            Storage.initialize();
+            var oldUUID = Storage.getSetting("analytics","UUID");
+            if(oldUUID != "Unknown")
+                p.appUUID = oldUUID;
+            else
+                Storage.setSetting("analytics", "UUID", p.appUUID);
+
+            //function register( trackingID_in, clientID_in, appName_in, appVersion_in, appID_in )
+            Analytics.register(p.analyticsID, p.appUUID , p.appName, p.appVersion, "dk.thang.lightfish");
+            Analytics.registerAdditionSettings("screenres",""+p.width+"x"+p.height);
+
+            Analytics.appstart();
+        }
+
+        console.log("pythonShutdown")
+        Analytics.screenview(screen);
+    }
 }
 
 
